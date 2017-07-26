@@ -1,3 +1,4 @@
+/*打印建议小5字体，10磅行间距*/
 typedef struct BiTNode {
     ElemType data;
     struct BiTNode *lchild, rchild;
