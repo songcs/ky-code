@@ -54,6 +54,27 @@ typedef struct {
     int vexnum, arcnum;
 } AMLGraph;
 
+/*NextNeighbor:邻接矩阵*/
+int NextNeighbor(MGragh &G, int x, int y) {
+    if (x != -1 && y != -1)
+        for (int col = y + 1; col < G.vexnum; col++)
+            if (G.Edge[x][col] > 0 && G.Edge[x][col] < maxWeight)
+                return col;
+    return -1;
+}
+
+/*NextNeighbor:邻接表*/
+int NextNeighbor(ALGraph &G, int x, int y) {
+    if (x != -1) {
+        ArcNode *p = G.vertices[x].first;//对应链表第一个顶点
+        while (p != NULL && p->adjvex != y)//寻找邻接顶点y
+            p = p->next;
+        if (p != NULL && p->next != NULL)
+            return p->next->adjvex;//返回下一个邻接顶点
+    }
+    return -1;
+}
+
 /*邻接表转化成邻接矩阵*/
 void Conver(ALGraph &g, int arcs[M][N]) {
     for (int i = 0; i < n; i++) {
@@ -225,4 +246,82 @@ void FindPath(ALGraph *G, int u, int v, int path[], int d) {
         p = p->next;//p指向下一个相邻点
     }
     visited[u] = 0;//恢复环境，使该顶点可以重新使用
+}
+
+/*拓扑排序算法实现*/
+bool TopologicalSort(Graph G) {
+    InitStack(S);
+    for (int i = 0; i < G.vexnum; i++)
+        if (indegree[i] == 0)
+            Push(S, i);//将所有入度为0的点进栈
+    int count = 0;
+    while (!IsEmpty(S)) {
+        Pop(S, i);
+        print[count++] = i;
+        for (p = G.vertices[i].firstarc; p; p = p->nextarc) {
+            v = p->adjvex;
+            if (!(--indegree[v]))
+                Push(S, v);
+        }
+    }
+    if (count < G.vexnum) return false;
+    else return true;
+}
+
+/*DFS实现有向无环图拓扑排序*/
+/*对于有向无环图G中的任意结点u,v他们之间的关系必然是三种之一：
+ * 1)假设u是v的祖先，则在调用DFS访问u的过程中，必然会在这个过程结束之前递归的归v调用DFS访问，也就是说v的DFS函数结束时间先于u的DFS结束时间。从而可以考虑再DFS调用的过程中设定一个时间标记，再DFS调用结束时，对各个结点计时。祖先的结束时间必然大于子孙的结束时间
+ * 2)如果u是v的子孙，则v是u的祖先，v的结束时间大于u的结束时间
+ * 3)如果uv没有关系，则u，v在拓扑排序中关系任意
+ * 从而按照结束时间从大到小，就可以得到拓扑排序序列*/
+/*实际上和深度遍历一样，只不过加入了time变量*/
+bool visited[MaxVertexNum];
+
+void BFSTraverse(Graph G) {
+    for (v = 0; v < G.vexnum; v++)
+        visited[v] = false;
+    time = 0;
+    for (v = 0; v < G.vexnum; v++)
+        if (!visited[v])
+            DFS(G, v);
+}
+
+void DFS(Graph G, int v) {
+    visited[v] = true;
+    visit(v);
+    for (w = FirstNeighbor(G, v); w >= 0; w = NextNeighbor(G, v, w))
+        if (!visited[w])
+            DFS(G, w);
+    time = time + 1;
+    finishTime[v] = time;
+}
+
+/*Dijkstra和Prim算法比较，基于邻接矩阵G[N][N]*/
+void compare() {
+    bool closed[N] = {false};
+    int Min[N] = {INF};
+//对应Dijkstra中的从start点出发到其余各点的最短路径或加入Prim算法中最小生成树的边。初始化的时候，都为正无穷
+    close[start] = true;
+    Min[start] = 0;
+//表示从start点开始执行Dijkstra或Prim算法
+    for (int i = 1; i < N; i++) {
+        //执行N-1次，即开始链接其余的N-1个结点
+        //保存尚未求解出的结点中与起点距离最短的结点或者到已球出来的最小生成树中距离最小的那个结点
+        int k = -1;
+        for (int j = 0; j < N; j++)
+            if (!closed[j] && (k == -1 || Min[k] > Min[j]))
+                k = j;
+        closed[k] = true;
+        //得到了k，这里考虑了图是连通的，所以认为k一定存在，不加判定条件
+        for (int j = 0; j < N; j++) {
+            //Dijkstra算法对应的更新Min算法
+            if (Min[j] > Min[k] + G[k][j])
+                Min[j] = Min[k] + G[k][j];
+            //Prim算法对应的更新Min算法
+            if (Min[j] > G[k][j])
+                Min[j] = G[k][j];
+        }
+
+
+    }
 }
