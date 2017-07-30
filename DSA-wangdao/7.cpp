@@ -264,3 +264,28 @@ bool IsMinHeap(ElemType a[], int len) {
     }
     return true;
 }
+
+/*归并排序*/
+ElemType *b = (ElemType *) malloc((n + 1) * sizeof(ElemType));
+
+void Merge(ElemType a[], int low, int mid, int high) {
+    //表a的两段a[low...mid],a[mid+1...high]各自有序，将他们合并成一个有序表
+    for (int k = low; k <= high; k++)
+        b[k] = a[k];
+    for (i = low, j = mid + 1, k = i; i <= mid && j <= high; k++)
+        if (b[i] <= b[j])//比较b的左右两段中的元素
+            a[k] = b[i++];//将较小值复制到a
+        else
+            a[k] = b[j++];
+    while (i <= mid) a[k++] = b[i++];
+    while (j <= high) a[k++] = b[j++];
+}
+
+void MergeSort(ElemType a[], int low, int high) {
+    if (low < high) {
+        int mid = (low + high) / 2;
+        MergeSort(a, low, mid);
+        MergeSort(a, mid + 1, high);
+        Merge(a, low, mid, high);
+    }
+}
